@@ -5,9 +5,8 @@
 #include "MQTT.h"
 
 #define DHTPIN 2
-#define LEDPIN 2
-#define BUTTONPIN 0
-#define DTHPOLLING 15000
+#define BUTTONPIN 0 // Tied to the Flash button.
+#define LEDPIN 16   // NodeMCU onboard LED
 
 DHT dht(DHTPIN, DHT22);
 
@@ -19,9 +18,7 @@ void initSerial()
   Serial.begin(9600);
   Serial.setTimeout(2000);
 
-  while (!Serial)
-  {
-  }
+  while (!Serial);
 }
 
 void connectToWifi()
@@ -33,6 +30,7 @@ void connectToWifi()
 bool isWifiConnected() {
   return WiFi.status() == WL_CONNECTED;
 }
+
 int sendSensorMeasurements()
 {
   float humidity = dht.readHumidity();
@@ -57,9 +55,27 @@ int sendSensorMeasurements()
   return 0;
 }
 
+void flushMQTTMessagesBeforeDeepSleep() {
+  for(int i=0; i<10; i++) {
+    mqtt->loop();
+    delay(25);
+  }
+}
+
+void blinkLed(int times) {
+  pinMode(LEDPIN, OUTPUT);
+  for(int i=0; i<times; i++) {
+    delay(250);
+    digitalWrite(LEDPIN, HIGH);
+    delay(250);
+    digitalWrite(LEDPIN, LOW);
+  }
+}
+
 void shouldResetSettings() {
   pinMode(BUTTONPIN, INPUT_PULLUP);
   if (!digitalRead(BUTTONPIN)) {
+    blinkLed(5);
     if (Serial) { Serial.println("[Reset] Resetting Configurations"); }
     WifiManagerHandler wifiManager = WifiManagerHandler(config);
     wifiManager.reset();
@@ -79,21 +95,10 @@ void setup()
   mqtt = new MQTT(config->getMQTTServer(), config->getMQTTPort(), config->getMQTTUsername(), config->getMQTTPassword(), PREFIX_DEFAULT, config->getDeviceID());
 }
 
-int timeSinceLastRead = 0;
 void loop()
 {
-  if (!isWifiConnected()) {
-    connectToWifi();
-  }
-  
-  mqtt->loop();
-
-  if (timeSinceLastRead > SENSOR_POLLING_MS)
-  {
-    sendSensorMeasurements();
-    timeSinceLastRead = 0;
-  }
-  delay(100);
-  timeSinceLastRead += 100;
+  sendSensorMeasurements();
+  flushMQTTMessagesBeforeDeepSleep();
   shouldResetSettings();
+  ESP.deepSleep(SENSOR_POLLING_US);
 }

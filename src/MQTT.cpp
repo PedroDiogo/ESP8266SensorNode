@@ -13,12 +13,12 @@ MQTT::MQTT(const char *mqtt_server, int mqtt_port, const char *mqtt_username, co
   strlcpy(_prefix, prefix, PREFIX_LENGTH);
   strlcpy(_device_id, device_id, DEVICE_ID_LENGTH);
 }
-void MQTT::loop()
+bool MQTT::loop()
 {
-  _client.loop();
+  return _client.loop();
 }
 
-void MQTT::publish(const char *topic, float value)
+bool MQTT::publish(const char *topic, float value)
 {
   reconnect();
 
@@ -29,10 +29,14 @@ void MQTT::publish(const char *topic, float value)
     char message[16];
     sprintf(message, "%.2f", value);
 
-    _client.publish(fullTopic, message);
+    bool publishedSuccessfully = _client.publish(fullTopic, message);
+    if (!publishedSuccessfully && Serial) {
+      Serial.println("[MQTT] Message wasn't published successfully.");
+    }
   } else {
     if (Serial) { Serial.println("[MQTT] Couldn't publish message."); }
   }
+  return false;
 }
 
 void MQTT::reconnect()

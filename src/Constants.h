@@ -23,6 +23,6 @@
 #define DEVICE_ID_DEFAULT     "ESP"
 #define PREFIX_DEFAULT        "sensors"
 
-#define SENSOR_POLLING_MS 15000
+#define SENSOR_POLLING_US 15000000
 
 #endif

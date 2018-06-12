@@ -22,6 +22,8 @@ These MQTT topics will be used to publish the sensor readings. The default polli
 * `/sensors/<device id>/humidity`
 * `/sensors/<device id>/heatindex`
 
+Both temperature readings - `temperature` and `heatindex` - are sent in Celsius, while `humidity` is sent in percentage.
+
 The `<device id>` can be customized via the WiFiManager UI, during the first initialization of the sensor node.
 
 The `sensors` prefix can be changed by changing the `PREFIX_DEFAULT` in `Constants.h`.
@@ -36,6 +38,6 @@ The `sensors` prefix can be changed by changing the `PREFIX_DEFAULT` in `Constan
 
 ## To Do
 - [ ] Unit tests
-- [ ] Add Deep Sleep Support (waiting for a new NodeMCU board to arrive to test this)
+- [x] Add Deep Sleep Support (waiting for a new NodeMCU board to arrive to test this)
 - [ ] Support for Pressure Sensor
 - [ ] Support for Light Sensor
