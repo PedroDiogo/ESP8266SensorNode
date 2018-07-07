@@ -5,6 +5,7 @@
 #include "MQTT.h"
 
 #define DHTPIN 2
+#define DHTPOWERPIN D1
 #define BUTTONPIN 0 // Tied to the Flash button.
 #define LEDPIN 16   // NodeMCU onboard LED
 
@@ -12,6 +13,16 @@ DHT dht(DHTPIN, DHT22);
 
 ConfigManager *config;
 MQTT *mqtt;
+
+void powerUpTemperatureSensor() {
+  pinMode(DHTPOWERPIN, OUTPUT);
+  digitalWrite(DHTPOWERPIN, HIGH);
+}
+
+void powerDownTemperatureSensor() {
+  digitalWrite(DHTPOWERPIN, LOW);
+  pinMode(DHTPOWERPIN, INPUT_PULLUP);
+}
 
 void initSerial()
 {
@@ -86,6 +97,7 @@ void shouldResetSettings() {
 
 void setup()
 {
+  powerUpTemperatureSensor();
   initSerial();
   Serial.println("Device Started");
 
@@ -98,6 +110,7 @@ void setup()
 void loop()
 {
   sendSensorMeasurements();
+  powerDownTemperatureSensor();
   flushMQTTMessagesBeforeDeepSleep();
   shouldResetSettings();
   ESP.deepSleep(SENSOR_POLLING_US);
